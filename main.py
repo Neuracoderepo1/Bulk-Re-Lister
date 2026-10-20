@@ -151,9 +151,11 @@ async def order(request: Request, email: str = Form(...), file: UploadFile = Fil
 
 @app.post("/webhook")
 async def webhook(request: Request, bg: BackgroundTasks):
-    try:
-        ev = stripe.Webhook.construct_event(await request.body(), request.headers.get("stripe-signature"),
-                                            os.getenv("STRIPE_WEBHOOK_SECRET"))
+    raw = await request.body()
+    try:  # verify the signature, then read the verified payload as plain JSON (SDK objects are not dicts)
+        stripe.Webhook.construct_event(raw, request.headers.get("stripe-signature"),
+                                       os.getenv("STRIPE_WEBHOOK_SECRET"))
+        ev = json.loads(raw)
     except Exception:
         raise HTTPException(400, "bad signature")
     s = ev["data"]["object"]
