@@ -119,7 +119,7 @@ def healthz():
     return {"ok": True, "model_healthy": core.HEALTHY, "intake_open": core.intake_open()}
 
 
-BUSINESS = os.getenv("BUSINESS_NAME", "[BUSINESS NAME]")
+BUSINESS = os.getenv("BUSINESS_NAME", "ListPilot")
 SUPPORT = os.getenv("SUPPORT_EMAIL", OWNER or "[SUPPORT EMAIL]")
 LEGAL = {
     "terms": ("Terms of Service", f"""<p>These terms govern use of the listing rewriting service operated by {BUSINESS} ("we").</p>
