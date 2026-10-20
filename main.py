@@ -1,5 +1,6 @@
 """Web layer: order form, Stripe checkout + webhook, delivery, review tools, worker loop."""
 import hmac, json, os, smtplib, threading, time, uuid
+from pathlib import Path
 from contextlib import asynccontextmanager
 from email.message import EmailMessage
 
@@ -16,26 +17,9 @@ PRICE_CENTS = 1500
 HITS = {}
 core.init()
 
-PAGE = """<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Listing rewriter</title><style>
-:root{--ink:#1d2a2a;--paper:#f3f6f4;--accent:#1f6f5c}
-body{font:18px/1.55 Georgia,serif;color:var(--ink);background:var(--paper);max-width:34rem;margin:3rem auto;padding:0 1.2rem}
-h1{font-size:2.4rem;line-height:1.1;margin:0 0 .6rem}
-form{margin-top:2rem;padding-top:1.5rem;border-top:2px solid var(--ink)}
-label{display:block;margin:1rem 0 .3rem;font-weight:bold}
-input{font:inherit;width:100%;box-sizing:border-box;padding:.6rem;border:1px solid var(--ink);background:#fff}
-button{font:inherit;margin-top:1.4rem;padding:.7rem 1.2rem;background:var(--accent);color:#fff;border:0;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:3px solid #e0a100}
-small{display:block;margin-top:.5rem;opacity:.75}
-</style><h1>Product listings rewritten, back in about ten minutes.</h1>
-<p>Upload a CSV with <b>title</b> and <b>description</b> columns (up to 25 rows). We rewrite each listing using
-only the facts you provide and check it automatically. Any row we can't verify comes back unchanged and is marked.
-If more than a fifth of rows fail, you're refunded in full. $15 per batch. Please review before publishing.</p>
-<form method=post action=/order enctype=multipart/form-data>
-<label for=e>Email</label><input id=e name=email type=email maxlength=254 required>
-<label for=f>CSV file</label><input id=f name=file type=file accept=.csv required>
-<button>Pay $15 and start</button><small>Nothing runs until payment clears. Files are deleted after 14 days.</small>
-<small>By paying you agree to the <a href=/terms>terms</a>. See the <a href=/privacy>privacy</a> and <a href=/refund-policy>refund</a> policies.</small></form>"""
+INDEX = (Path(__file__).parent / "web" / "index.html").read_text(encoding="utf-8")
+CLOSED_NOTICE = '<div class="notice" role="status">We’re at capacity right now, so new orders are paused. Please try again later.</div>'
+
 
 
 def notify(to, subject, body, attach=None):
@@ -169,7 +153,9 @@ def legal(page: str):
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    return PAGE if core.intake_open() else "<p>We're at capacity. Please try again later.</p>"
+    if core.intake_open():
+        return INDEX.replace("<!--NOTICE-->", "")
+    return INDEX.replace("<!--NOTICE-->", CLOSED_NOTICE).replace("<button>", "<button disabled>")
 
 
 @app.post("/order")

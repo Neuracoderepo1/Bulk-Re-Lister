@@ -94,7 +94,8 @@ def test_admin_auth_and_kill_switch():
     assert client.post("/admin/intake?open=0", headers=h).json() == {"intake_open": False}
     r = client.post("/order", data={"email": "a@b.co"}, files={"file": ("l.csv", CSV, "text/csv")})
     assert r.status_code == 503
-    assert "capacity" in client.get("/").text
+    home = client.get("/").text
+    assert "at capacity" in home and "<button disabled>" in home
     client.post("/admin/intake?open=1", headers=h)
 
 

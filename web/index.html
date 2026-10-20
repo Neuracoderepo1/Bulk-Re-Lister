@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bulk Re-Lister: product listings rewritten, checked, and returned in minutes</title>
+<meta name="description" content="Upload a CSV of product titles and descriptions. Get back clearer, keyword-rich rewrites that use only your facts. $15 per batch of up to 25 listings, refunded if too many rows fail our checks.">
+<style>
+:root{--ink:#1d2a2a;--paper:#f3f6f4;--card:#fff;--line:#c9d6d1;--accent:#1f6f5c;--accent-ink:#fff;--warn:#e0a100;--muted:#4d5f5b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e6efec;--paper:#0f1716;--card:#16211f;--line:#2b3d39;--accent:#4fb89d;--accent-ink:#06130f;--muted:#9db3ad}}
+:root[data-theme="dark"]{--ink:#e6efec;--paper:#0f1716;--card:#16211f;--line:#2b3d39;--accent:#4fb89d;--accent-ink:#06130f;--muted:#9db3ad}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.6 Georgia,"Times New Roman",serif}
+.wrap{max-width:68rem;margin:0 auto;padding:0 1.25rem}
+header{padding:1.1rem 0;border-bottom:1px solid var(--line)}
+header .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
+.brand{font-weight:bold;letter-spacing:.01em}
+nav a{margin-left:1.2rem;color:var(--muted);text-decoration:none;font-size:.95rem}
+nav a:hover{color:var(--ink);text-decoration:underline}
+h1{font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.05;margin:0 0 1rem;letter-spacing:-.01em}
+h2{font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.15;margin:0 0 1rem}
+.hero{display:grid;gap:2.5rem;padding:3rem 0 3.5rem}
+@media(min-width:56rem){.hero{grid-template-columns:1.15fr .85fr;align-items:start}}
+.lede{font-size:1.2rem;color:var(--muted);max-width:34rem}
+.tag{display:inline-block;font:600 .8rem/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:1rem}
+form{background:var(--card);border:2px solid var(--ink);padding:1.5rem}
+form h2{font-size:1.35rem;margin-bottom:.4rem}
+label{display:block;margin:1rem 0 .3rem;font-weight:bold;font-size:.95rem}
+input{font:inherit;width:100%;padding:.65rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink)}
+button{font:inherit;font-weight:bold;width:100%;margin-top:1.3rem;padding:.8rem 1.2rem;background:var(--accent);color:var(--accent-ink);border:0;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+small,.fine{display:block;margin-top:.7rem;color:var(--muted);font-size:.85rem;line-height:1.45}
+.notice{background:var(--warn);color:#1d1d1d;padding:.8rem 1rem;margin-bottom:1rem;font:600 .95rem/1.4 system-ui,sans-serif}
+section{padding:3rem 0;border-top:1px solid var(--line)}
+.steps{display:grid;gap:1.5rem;counter-reset:s;padding:0;list-style:none;margin:0}
+@media(min-width:48rem){.steps{grid-template-columns:repeat(3,1fr)}}
+.steps li{counter-increment:s;border-top:3px solid var(--accent);padding-top:.8rem}
+.steps li:before{content:counter(s);display:block;font:700 2rem/1 Georgia,serif;color:var(--accent);margin-bottom:.4rem}
+.steps b{display:block;margin-bottom:.2rem}
+.cols{display:grid;gap:2rem}
+@media(min-width:48rem){.cols{grid-template-columns:1fr 1fr}}
+ul.checks{padding-left:1.2rem;margin:0}
+ul.checks li{margin:.45rem 0}
+.compare{display:grid;gap:1rem}
+@media(min-width:48rem){.compare{grid-template-columns:1fr 1fr}}
+.panel{background:var(--card);border:1px solid var(--line);padding:1.1rem 1.2rem}
+.panel h3{font:700 .8rem/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 .6rem}
+.panel p{margin:.3rem 0}
+.panel .t{font-weight:bold}
+pre{background:var(--card);border:1px solid var(--line);padding:1rem;overflow-x:auto;font:.9rem/1.5 ui-monospace,Menlo,Consolas,monospace;margin:1rem 0 0}
+.price{display:flex;flex-wrap:wrap;gap:1.5rem 3rem;align-items:baseline}
+.price .n{font-size:3.4rem;line-height:1;font-weight:bold}
+details{border-top:1px solid var(--line);padding:.9rem 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{cursor:pointer;font-weight:bold}
+details p{margin:.6rem 0 0;color:var(--muted)}
+footer{padding:2rem 0 3rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+footer a{color:var(--muted);margin-right:1.2rem}
+a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header><div class="wrap"><span class="brand">Bulk Re-Lister</span>
+<nav><a href="#how">How it works</a><a href="#checks">What we check</a><a href="#faq">FAQ</a></nav></div></header>
+
+<main>
+<div class="wrap hero">
+  <div>
+    <span class="tag">Listing rewrites with a built-in fact checker</span>
+    <h1>Product listings rewritten, back in about ten minutes.</h1>
+    <p class="lede">Upload a CSV of titles and descriptions. Each row is rewritten to be clearer and more searchable using only the facts you gave us, then checked automatically before it comes back to you.</p>
+    <p class="fine">$15 per batch of up to 25 listings. If more than a fifth of the rows fail our checks, you’re refunded in full.</p>
+  </div>
+  <form method="post" action="/order" enctype="multipart/form-data">
+    <!--NOTICE-->
+    <h2>Start a batch</h2>
+    <label for="e">Email</label>
+    <input id="e" name="email" type="email" maxlength="254" autocomplete="email" required>
+    <label for="f">CSV file</label>
+    <input id="f" name="file" type="file" accept=".csv" required>
+    <button>Pay $15 and start</button>
+    <small>Nothing runs until payment clears. Files are deleted after 14 days.</small>
+    <small>By paying you agree to the <a href="/terms">terms</a>. See the <a href="/privacy">privacy</a> and <a href="/refund-policy">refund</a> policies.</small>
+  </form>
+</div>
+
+<section id="how"><div class="wrap">
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><b>Upload your CSV</b>A header row with <code>title</code> and <code>description</code> columns. Up to 25 rows and 200 KB per order.</li>
+    <li><b>Pay securely</b>Checkout is handled by Stripe. We never see your card, and no rewriting starts until payment clears.</li>
+    <li><b>Download the result</b>You get a CSV by email and on a private page. Rows we couldn’t verify come back unchanged and are marked for your review.</li>
+  </ol>
+  <pre>title,description
+Ceramic mug,Blue ceramic mug. Holds 350 ml.
+Canvas tote,Everyday bag with a zip pocket.</pre>
+</div></section>
+
+<section id="checks"><div class="wrap">
+  <h2>Rewrites that stay true to your listing</h2>
+  <div class="cols">
+    <div>
+      <p>Persuasive copy is easy. Copy that doesn’t invent things is the hard part. Every rewrite goes through two checks before it reaches you: fixed rules, then a second model pass that compares it against your original.</p>
+      <ul class="checks">
+        <li>No new numbers or specifications</li>
+        <li>No materials or claims your source didn’t state</li>
+        <li>No medical or guarantee claims</li>
+        <li>Titles within 80 characters, descriptions within 1,000</li>
+        <li>Spreadsheet-safe output, with formulas neutralized</li>
+      </ul>
+    </div>
+    <div class="compare" aria-label="Illustrative example">
+      <div class="panel"><h3>Your listing</h3><p class="t">Ceramic mug</p><p>Blue ceramic mug. Holds 350 ml.</p></div>
+      <div class="panel"><h3>Illustrative rewrite</h3><p class="t">Blue Ceramic Mug, 350 ml Capacity</p><p>A blue ceramic mug that holds 350 ml, sized for tea or coffee at your desk or table.</p></div>
+    </div>
+  </div>
+  <p class="fine">The example above is illustrative. Results vary with the listing you send. Please review all output before you publish it.</p>
+</div></section>
+
+<section><div class="wrap price">
+  <div><span class="n">$15</span> per batch</div>
+  <p style="max-width:34rem;margin:0">Up to 25 listings per order. Pay only for the batch you upload. If more than 20% of rows can’t be verified, the refund is automatic and in full.</p>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <h2>Questions</h2>
+  <details><summary>What happens to rows that fail the checks?</summary><p>They come back exactly as you sent them, marked <code>unchanged_needs_review</code>, so you never receive an unverified rewrite by accident.</p></details>
+  <details><summary>Which marketplaces does it work for?</summary><p>It rewrites plain titles and descriptions, so the output works anywhere you can paste text or import a CSV. It doesn’t connect to any marketplace account.</p></details>
+  <details><summary>Is my data kept?</summary><p>Uploads, results and your email are deleted automatically 14 days after your order. Unpaid uploads are deleted after 24 hours. Your listing text is sent to our AI provider, Anthropic, to produce the rewrite.</p></details>
+  <details><summary>Can I trust the output without reading it?</summary><p>No. The checks catch invented specs and risky claims, but the output is machine-generated, so review it before you publish.</p></details>
+  <details><summary>Something went wrong with my order.</summary><p>Contact us within 14 days using the address on the <a href="/refund-policy">refund policy</a> page and we’ll review it.</p></details>
+</div></section>
+</main>
+
+<footer><div class="wrap"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refund-policy">Refund policy</a></div></footer>
+</body>
+</html>
