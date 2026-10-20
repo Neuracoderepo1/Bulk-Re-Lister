@@ -1,4 +1,4 @@
-# ListPilot (Bulk Re-Lister)
+# ListProof (formerly Bulk Re-Lister)
 
 Autonomous listing rewriter: CSV in -> Stripe payment -> writer + checker -> CSV out. Nothing runs until payment clears.
 

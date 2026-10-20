@@ -1,4 +1,4 @@
--- Bulk Re-Lister schema (Postgres / Supabase). core.init() runs the same statements idempotently on startup.
+-- ListProof schema (Postgres / Supabase). core.init() runs the same statements idempotently on startup.
 -- Tables are prefixed rl_ so they cannot collide with anything already in the project.
 CREATE TABLE IF NOT EXISTS rl_jobs(id TEXT PRIMARY KEY, email TEXT, status TEXT, input TEXT,
     output TEXT, failed INTEGER DEFAULT 0, total INTEGER, payment TEXT, created DOUBLE PRECISION,

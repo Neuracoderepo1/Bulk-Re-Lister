@@ -119,17 +119,17 @@ def healthz():
     return {"ok": True, "model_healthy": core.HEALTHY, "intake_open": core.intake_open()}
 
 
-BUSINESS = os.getenv("BUSINESS_NAME", "ListPilot")
+BUSINESS = os.getenv("BUSINESS_NAME", "ListProof")
 SUPPORT = os.getenv("SUPPORT_EMAIL", OWNER or "[SUPPORT EMAIL]")
 LEGAL = {
-    "terms": ("Terms of Service", f"""<p>These terms govern use of the listing rewriting service operated by {BUSINESS} ("we").</p>
+    "terms": ("Terms of Service", f"""<p>These terms govern use of the ListProof listing rewriting service operated by {BUSINESS} ("we").</p>
 <h2>The service</h2><p>You upload a CSV of product titles and descriptions (up to 25 rows). We rewrite each row using an AI model, run automated checks, and return a CSV. Rows we cannot verify are returned unchanged and marked <code>unchanged_needs_review</code>.</p>
 <h2>Your responsibility</h2><p>Output is machine-generated and may contain errors. You must review all output before publishing it. You are responsible for the accuracy and legality of your listings and confirm you have the right to submit the content you upload.</p>
 <h2>Price and payment</h2><p>$15 USD per batch, charged by Stripe before processing begins.</p>
 <h2>Refunds</h2><p>See the <a href=/refund-policy>refund policy</a>.</p>
 <h2>Limits</h2><p>The service is provided "as is". To the extent permitted by law, our liability is limited to the amount you paid for the affected batch. We may refuse or stop service at our discretion, including for abuse.</p>
 <h2>Contact</h2><p>{SUPPORT}</p>"""),
-    "privacy": ("Privacy Policy", f"""<p>{BUSINESS} ("we") processes the minimum data needed to deliver this service.</p>
+    "privacy": ("Privacy Policy", f"""<p>{BUSINESS} ("we"), which operates ListProof, processes the minimum data needed to deliver this service.</p>
 <h2>What we collect</h2><p>Your email address, the CSV content you upload, and the rewritten output. Payment is handled by Stripe; we do not receive or store card details.</p>
 <h2>How we use it</h2><p>To process your order, deliver results, issue refunds, and prevent abuse. Your listing text is sent to our AI provider (Anthropic) to generate and check the rewrite.</p>
 <h2>Retention</h2><p>Uploaded and output data and your email are deleted automatically {core.RETENTION_DAYS} days after your order. Unpaid uploads are deleted after 24 hours. Payment and accounting records may be kept as required by law.</p>
