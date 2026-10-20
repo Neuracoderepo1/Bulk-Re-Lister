@@ -1,139 +1,422 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bulk Re-Lister: product listings rewritten, checked, and returned in minutes</title>
-<meta name="description" content="Upload a CSV of product titles and descriptions. Get back clearer, keyword-rich rewrites that use only your facts. $15 per batch of up to 25 listings, refunded if too many rows fail our checks.">
-<style>
-:root{--ink:#1d2a2a;--paper:#f3f6f4;--card:#fff;--line:#c9d6d1;--accent:#1f6f5c;--accent-ink:#fff;--warn:#e0a100;--muted:#4d5f5b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#e6efec;--paper:#0f1716;--card:#16211f;--line:#2b3d39;--accent:#4fb89d;--accent-ink:#06130f;--muted:#9db3ad}}
-:root[data-theme="dark"]{--ink:#e6efec;--paper:#0f1716;--card:#16211f;--line:#2b3d39;--accent:#4fb89d;--accent-ink:#06130f;--muted:#9db3ad}
-*{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
-body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.6 Georgia,"Times New Roman",serif}
-.wrap{max-width:68rem;margin:0 auto;padding:0 1.25rem}
-header{padding:1.1rem 0;border-bottom:1px solid var(--line)}
-header .wrap{display:flex;justify-content:space-between;align-items:baseline;gap:1rem}
-.brand{font-weight:bold;letter-spacing:.01em}
-nav a{margin-left:1.2rem;color:var(--muted);text-decoration:none;font-size:.95rem}
-nav a:hover{color:var(--ink);text-decoration:underline}
-h1{font-size:clamp(2.1rem,6vw,3.6rem);line-height:1.05;margin:0 0 1rem;letter-spacing:-.01em}
-h2{font-size:clamp(1.5rem,3.6vw,2.1rem);line-height:1.15;margin:0 0 1rem}
-.hero{display:grid;gap:2.5rem;padding:3rem 0 3.5rem}
-@media(min-width:56rem){.hero{grid-template-columns:1.15fr .85fr;align-items:start}}
-.lede{font-size:1.2rem;color:var(--muted);max-width:34rem}
-.tag{display:inline-block;font:600 .8rem/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:1rem}
-form{background:var(--card);border:2px solid var(--ink);padding:1.5rem}
-form h2{font-size:1.35rem;margin-bottom:.4rem}
-label{display:block;margin:1rem 0 .3rem;font-weight:bold;font-size:.95rem}
-input{font:inherit;width:100%;padding:.65rem;border:1px solid var(--ink);background:var(--paper);color:var(--ink)}
-button{font:inherit;font-weight:bold;width:100%;margin-top:1.3rem;padding:.8rem 1.2rem;background:var(--accent);color:var(--accent-ink);border:0;cursor:pointer}
-button:disabled{opacity:.5;cursor:not-allowed}
-button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
-small,.fine{display:block;margin-top:.7rem;color:var(--muted);font-size:.85rem;line-height:1.45}
-.notice{background:var(--warn);color:#1d1d1d;padding:.8rem 1rem;margin-bottom:1rem;font:600 .95rem/1.4 system-ui,sans-serif}
-section{padding:3rem 0;border-top:1px solid var(--line)}
-.steps{display:grid;gap:1.5rem;counter-reset:s;padding:0;list-style:none;margin:0}
-@media(min-width:48rem){.steps{grid-template-columns:repeat(3,1fr)}}
-.steps li{counter-increment:s;border-top:3px solid var(--accent);padding-top:.8rem}
-.steps li:before{content:counter(s);display:block;font:700 2rem/1 Georgia,serif;color:var(--accent);margin-bottom:.4rem}
-.steps b{display:block;margin-bottom:.2rem}
-.cols{display:grid;gap:2rem}
-@media(min-width:48rem){.cols{grid-template-columns:1fr 1fr}}
-ul.checks{padding-left:1.2rem;margin:0}
-ul.checks li{margin:.45rem 0}
-.compare{display:grid;gap:1rem}
-@media(min-width:48rem){.compare{grid-template-columns:1fr 1fr}}
-.panel{background:var(--card);border:1px solid var(--line);padding:1.1rem 1.2rem}
-.panel h3{font:700 .8rem/1 system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 .6rem}
-.panel p{margin:.3rem 0}
-.panel .t{font-weight:bold}
-pre{background:var(--card);border:1px solid var(--line);padding:1rem;overflow-x:auto;font:.9rem/1.5 ui-monospace,Menlo,Consolas,monospace;margin:1rem 0 0}
-.price{display:flex;flex-wrap:wrap;gap:1.5rem 3rem;align-items:baseline}
-.price .n{font-size:3.4rem;line-height:1;font-weight:bold}
-details{border-top:1px solid var(--line);padding:.9rem 0}
-details:last-of-type{border-bottom:1px solid var(--line)}
-summary{cursor:pointer;font-weight:bold}
-details p{margin:.6rem 0 0;color:var(--muted)}
-footer{padding:2rem 0 3rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
-footer a{color:var(--muted);margin-right:1.2rem}
-a{color:var(--accent)}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0d12">
+  <meta name="description" content="Upload a CSV of product titles and descriptions. ListPilot rewrites each row to be clearer and more searchable using only your facts, then checks it. $15 per batch of up to 25 listings, refunded if too many rows fail our checks.">
+  <title>ListPilot — Your listings. On autopilot.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090c11; --panel: #10151d; --panel-2: #141b24; --line: rgba(255,255,255,.09);
+      --text: #f3f6f8; --muted: #9aa8b7; --cyan: #5de6e0; --lime: #c8ff6b;
+      --blue: #7ca7ff; --radius: 22px; --max: 1180px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--text); background: var(--bg); font-family: "DM Sans", sans-serif; line-height: 1.55; overflow-x: hidden; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:-1; opacity:.25; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); background-size:54px 54px; mask-image:linear-gradient(to bottom,black,transparent 82%); }
+    a { color: inherit; text-decoration: none; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .wrap { width: min(var(--max), calc(100% - 44px)); margin: 0 auto; }
+    .nav { height: 82px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,.07); position:relative; z-index:10; }
+    .brand { display:flex; align-items:center; gap:11px; font-family:"Space Grotesk",sans-serif; font-weight:700; letter-spacing:-.7px; font-size:22px; }
+    .brand-mark { width:36px; height:36px; border-radius:12px; display:grid; place-items:center; color:#071014; background:linear-gradient(135deg,var(--cyan),var(--lime)); box-shadow:0 0 28px rgba(93,230,224,.16); }
+    .brand-mark svg { width:22px; height:22px; }
+    .nav-links { display:flex; gap:32px; align-items:center; color:#b5c0ca; font-size:13px; }
+    .nav-links a:hover { color:white; }
+    .nav-actions { display:flex; gap:10px; align-items:center; }
+    .btn { border:0; border-radius:12px; padding:12px 18px; display:inline-flex; align-items:center; justify-content:center; gap:9px; font-weight:700; font-size:13px; transition:transform .2s, box-shadow .2s, background .2s; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { color:#061113; background:linear-gradient(110deg,var(--cyan),var(--lime)); box-shadow:0 8px 30px rgba(93,230,224,.13); }
+    .btn-primary:hover { box-shadow:0 12px 38px rgba(93,230,224,.24); }
+    .btn-quiet { border:1px solid var(--line); color:#e9f0f5; background:rgba(255,255,255,.035); }
+    .btn-quiet:hover { background:rgba(255,255,255,.08); }
+    .menu-toggle { display:none; background:none; color:white; border:1px solid var(--line); border-radius:10px; padding:9px; }
+    .hero { padding:82px 0 76px; position:relative; }
+    .hero::before { content:""; position:absolute; width:560px; height:500px; top:10px; right:-160px; background:radial-gradient(ellipse,rgba(48,190,190,.12),transparent 68%); pointer-events:none; }
+    .hero-grid { display:grid; grid-template-columns: .92fr 1.08fr; gap:52px; align-items:center; position:relative; }
+    .eyebrow { display:inline-flex; align-items:center; gap:9px; border:1px solid rgba(93,230,224,.23); color:#a4f4ec; border-radius:999px; padding:7px 12px; font-size:11px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; background:rgba(93,230,224,.055); }
+    .pulse { width:7px; height:7px; border-radius:50%; background:var(--lime); box-shadow:0 0 12px var(--lime); }
+    h1,h2,h3,p { margin-top:0; }
+    h1,h2,h3 { font-family:"Space Grotesk",sans-serif; letter-spacing:-1.5px; }
+    h1 { font-size:clamp(44px,5.3vw,70px); line-height:1.02; margin:22px 0 22px; max-width:600px; }
+    .gradient-text { background:linear-gradient(100deg,#fff 8%,#91f4e9 53%,#c8ff6b 95%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hero-copy { font-size:17px; color:#a8b4c1; max-width:495px; line-height:1.8; }
+    .hero-ctas { display:flex; gap:12px; margin:29px 0 23px; flex-wrap:wrap; }
+    .hero-ctas .btn { padding:15px 20px; }
+    .micro-proof { display:flex; align-items:center; gap:10px; color:#83919f; font-size:12px; }
+    .avatars { display:flex; padding-left:4px; }
+    .avatar { width:24px; height:24px; border:2px solid var(--bg); margin-left:-5px; border-radius:50%; display:grid; place-items:center; font-size:9px; font-weight:800; color:#081014; background:linear-gradient(135deg,#c8ff6b,#5de6e0); }
+    .hero-visual { position:relative; min-width:0; }
+    .visual-glow { position:absolute; inset:9% 4% 0; background:radial-gradient(ellipse,rgba(93,230,224,.15),transparent 68%); filter:blur(24px); }
+    .dashboard { border:1px solid rgba(255,255,255,.13); background:rgba(15,20,28,.92); border-radius:20px; overflow:hidden; box-shadow:0 35px 100px rgba(0,0,0,.5),0 0 0 7px rgba(255,255,255,.015); position:relative; transform:perspective(1200px) rotateY(-4deg) rotateX(1deg); }
+    .dash-top { height:47px; display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid var(--line); color:#a9b6c3; font-size:10px; }
+    .dots { display:flex; gap:5px; } .dots i { width:6px;height:6px;border-radius:50%;background:#3d4955;display:block; }
+    .dash-label { display:flex; align-items:center; gap:8px; }
+    .mini-logo { width:19px;height:19px;border-radius:6px;background:linear-gradient(135deg,var(--cyan),var(--lime)); }
+    .live { color:var(--lime); font-size:9px; letter-spacing:.9px; }
+    .dash-content { padding:19px; }
+    .dash-heading { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; margin-bottom:16px; }
+    .dash-heading h3 { font-size:17px; letter-spacing:-.5px; margin:0 0 4px; }
+    .dash-heading p { color:#82909e; font-size:10px; margin:0; }
+    .tiny-button { font-size:9px; color:#dce7ed; padding:7px 9px; border:1px solid var(--line); border-radius:7px; background:#151d27; white-space:nowrap; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin-bottom:15px; }
+    .stat { background:linear-gradient(145deg,#171f29,#111720); border:1px solid var(--line); padding:12px; border-radius:11px; }
+    .stat span { display:block; color:#8795a4; font-size:9px; margin-bottom:5px; }
+    .stat strong { display:block; font-family:"Space Grotesk",sans-serif; font-size:21px; letter-spacing:-.8px; }
+    .stat em { font-style:normal; color:var(--lime); font-size:9px; }
+    .table { border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+    .table-head,.product-row { display:grid; grid-template-columns:1.7fr .9fr .85fr; gap:8px; align-items:center; padding:10px 12px; }
+    .table-head { background:#141b24; color:#748392; text-transform:uppercase; letter-spacing:.7px; font-size:8px; }
+    .product-row { border-top:1px solid rgba(255,255,255,.05); font-size:9px; color:#c7d0d8; }
+    .product-name { display:flex; align-items:center; gap:8px; min-width:0; }
+    .product-thumb { width:27px;height:27px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;font-size:13px;background:linear-gradient(135deg,#2b4c55,#1d2c36); }
+    .product-name strong { display:block; white-space:nowrap; overflow:hidden;text-overflow:ellipsis;font-size:9px; }
+    .product-name small { color:#778694; display:block; font-size:8px; margin-top:2px; }
+    .status { display:inline-flex; width:max-content; padding:4px 6px; border-radius:5px; color:#c8ff6b; background:rgba(200,255,107,.08); font-size:8px; }
+    .score { color:var(--cyan); font-weight:700; }
+    .dash-bottom { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 15px; border-top:1px solid var(--line); color:#8997a4; font-size:9px; }
+    .progress { width:80px;height:4px;background:#29343e;border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:6px; }
+    .progress i { display:block;height:100%;width:78%;background:linear-gradient(90deg,var(--cyan),var(--lime));border-radius:99px; }
+    .float-card { position:absolute; right:-22px; bottom:39px; background:#151e27; border:1px solid rgba(200,255,107,.25); border-radius:13px; padding:12px 15px; box-shadow:0 15px 40px rgba(0,0,0,.35); display:flex; gap:10px; align-items:center; animation:float 5s ease-in-out infinite; }
+    .float-icon { width:31px;height:31px;border-radius:9px;display:grid;place-items:center;background:rgba(200,255,107,.12);color:var(--lime); }
+    .float-card strong { display:block;font-size:11px; } .float-card small { display:block;color:#91a0ad;font-size:9px;margin-top:2px; }
+    @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+    .trust-strip { border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:23px 0; }
+    .trust-inner { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
+    .trust-label { font-size:10px; color:#748392; letter-spacing:1.3px; text-transform:uppercase; }
+    .trust-points { display:flex; gap:28px; flex-wrap:wrap; color:#a7b3be; font-size:12px; }
+    .trust-points span { display:flex; align-items:center; gap:8px; }
+    .check { color:var(--lime); font-weight:bold; }
+    section { padding:100px 0; }
+    .section-head { max-width:660px; margin:0 auto 47px; text-align:center; }
+    .section-kicker { font-size:11px; font-weight:700; letter-spacing:1.8px; color:var(--cyan); text-transform:uppercase; margin-bottom:13px; }
+    h2 { font-size:clamp(33px,4vw,48px); line-height:1.1; margin-bottom:16px; }
+    .section-head p { color:var(--muted); font-size:15px; line-height:1.8; margin:0; }
+    .features { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .feature { padding:25px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(255,255,255,.012)); transition:border-color .2s,transform .2s; }
+    .feature:hover { transform:translateY(-4px); border-color:rgba(93,230,224,.3); }
+    .feature-icon { width:43px;height:43px;display:grid;place-items:center;border-radius:13px;color:var(--cyan);background:rgba(93,230,224,.09);margin-bottom:20px; }
+    .feature-icon svg { width:21px;height:21px; }
+    .feature h3 { font-size:19px; letter-spacing:-.5px; margin:0 0 9px; }
+    .feature p { color:#92a0ad; font-size:13px; line-height:1.8; margin:0; }
+    .workflow { background:linear-gradient(180deg,transparent,rgba(20,30,38,.36),transparent); }
+    .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:28px; counter-reset:step; }
+    .step { position:relative; padding:28px 24px 24px; border-top:1px solid rgba(93,230,224,.35); }
+    .step:before { counter-increment:step; content:"0" counter(step); display:block; color:var(--lime); font-family:"Space Grotesk",sans-serif; font-size:13px; letter-spacing:1px; margin-bottom:23px; }
+    .step h3 { font-size:21px; letter-spacing:-.6px; margin-bottom:9px; }
+    .step p { color:#91a0ad; font-size:13px; line-height:1.8; margin:0; }
+    .demo-panel { display:grid; grid-template-columns:.9fr 1.1fr; gap:30px; align-items:center; padding:34px; border:1px solid var(--line); border-radius:24px; background:radial-gradient(ellipse at 90% 0%,rgba(93,230,224,.08),transparent 45%),#10151d; }
+    .demo-copy h2 { font-size:clamp(30px,3.5vw,42px); }
+    .demo-copy p { color:var(--muted); line-height:1.8; font-size:14px; }
+    .demo-copy .btn { margin-top:10px; }
+    .demo-preview { border:1px solid var(--line); background:#0c1118; border-radius:15px; padding:17px; }
+    .demo-preview-top { display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;font-size:11px; }
+    .demo-preview-top span { color:#81909d; }
+    .before-after { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .sample { padding:14px;border-radius:10px;border:1px solid var(--line);min-width:0; }
+    .sample small { display:block;color:#8493a0;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px; }
+    .sample strong { display:block;font-size:12px;margin-bottom:7px; }
+    .sample p { color:#98a5b0;font-size:10px;line-height:1.7;margin:0; }
+    .sample.after { border-color:rgba(93,230,224,.2);background:rgba(93,230,224,.035); }
+    .sample.after small { color:var(--cyan); }
+    .sample.after strong { color:#e8ffff; }
+    .demo-note { display:flex;gap:8px;align-items:center;margin-top:13px;color:#8a99a7;font-size:10px; }
+    .pricing-card { max-width:760px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:30px; padding:34px; border:1px solid rgba(93,230,224,.22); border-radius:22px; background:radial-gradient(ellipse at 0% 100%,rgba(93,230,224,.07),transparent 55%),#10151d; }
+    .pricing-card h3 { font-size:24px; margin:0 0 9px; }
+    .pricing-card p { color:var(--muted);font-size:13px;line-height:1.8; }
+    .price-placeholder { font-family:"Space Grotesk",sans-serif;font-size:34px;font-weight:700;letter-spacing:-1px; }
+    .price-placeholder small { font-family:"DM Sans",sans-serif;font-size:12px;font-weight:500;letter-spacing:0;color:#8997a4; }
+    .included { list-style:none;padding:0;margin:17px 0 0;display:grid;gap:11px;font-size:12px;color:#b7c2cc; }
+    .included li { display:flex;gap:9px;align-items:flex-start; }
+    .pricing-action { display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding-left:28px;border-left:1px solid var(--line); }
+    .pricing-action .btn { margin-top:8px; }
+    .pricing-action small { color:#7f8d99;font-size:10px;margin-top:12px; }
+    .faq { max-width:790px;margin:0 auto; }
+    .faq-item { border-bottom:1px solid var(--line); }
+    .faq-q { width:100%;padding:20px 0;display:flex;justify-content:space-between;align-items:center;gap:18px;text-align:left;background:none;border:0;color:#edf3f7;font-weight:700;font-size:14px; }
+    .faq-q span:last-child { color:var(--cyan);font-size:20px;transition:transform .2s; }
+    .faq-a { display:none;color:#9aa8b5;font-size:13px;line-height:1.8;padding:0 35px 20px 0; }
+    .faq-item.open .faq-a { display:block; }
+    .faq-item.open .faq-q span:last-child { transform:rotate(45deg); }
+    .final-cta { padding:0 0 90px; }
+    .cta-panel { position:relative;overflow:hidden;text-align:center;padding:68px 30px;border:1px solid rgba(93,230,224,.22);border-radius:26px;background:radial-gradient(ellipse at 50% 110%,rgba(93,230,224,.15),transparent 55%),linear-gradient(135deg,#111923,#0c1117); }
+    .cta-panel:before,.cta-panel:after { content:"";position:absolute;width:260px;height:260px;border:1px solid rgba(93,230,224,.09);border-radius:50%;left:50%;top:100%;transform:translate(-50%,-25%); }
+    .cta-panel:after { width:390px;height:390px;transform:translate(-50%,-25%); }
+    .cta-panel > * { position:relative;z-index:1; }
+    .cta-panel h2 { max-width:670px;margin:18px auto 14px; }
+    .cta-panel p { color:#9ba9b6;max-width:530px;margin:0 auto 25px;font-size:14px;line-height:1.8; }
+    footer { border-top:1px solid var(--line);padding:28px 0 35px;color:#788794;font-size:11px; }
+    .footer-inner { display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap; }
+    .footer-links { display:flex;gap:20px; }
+    .footer-links a:hover { color:white; }
+    .toast { position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#17242a;color:#eafffb;border:1px solid rgba(93,230,224,.3);padding:12px 16px;border-radius:12px;font-size:12px;box-shadow:0 15px 50px #0008;z-index:100;transition:.25s;max-width:calc(100% - 32px); }
+    .toast.show { opacity:1;transform:translate(-50%,0); }
+    .order-form { display:flex;flex-direction:column;justify-content:center;align-items:stretch;padding-left:28px;border-left:1px solid var(--line); }
+    .order-form h3 { font-size:22px;margin:14px 0 6px; }
+    .order-form label { display:block;margin:14px 0 6px;font-size:12px;font-weight:700;color:#d5dee6; }
+    .order-form input { width:100%;padding:12px 13px;border-radius:10px;border:1px solid var(--line);background:#0c1118;color:var(--text);font-size:13px; }
+    .order-form input:focus-visible,.order-form button:focus-visible,.faq-q:focus-visible,a:focus-visible { outline:2px solid var(--cyan);outline-offset:2px; }
+    .order-form button { margin-top:18px;border:0;border-radius:12px;padding:14px 18px;font-weight:700;font-size:13px;color:#061113;background:linear-gradient(110deg,var(--cyan),var(--lime));box-shadow:0 8px 30px rgba(93,230,224,.13);width:100%; }
+    .order-form button:disabled { opacity:.5;cursor:not-allowed;transform:none; }
+    .order-form small { display:block;color:#7f8d99;font-size:11px;margin-top:12px;line-height:1.5; }
+    .order-form small a { text-decoration:underline; }
+    .notice { background:#ffc76b;color:#1b1500;padding:10px 12px;border-radius:10px;margin-bottom:6px;font-size:12px;font-weight:600; }
+    @media(max-width:900px) {
+      .hero-grid { grid-template-columns:1fr; gap:48px; }
+      .hero-copy { max-width:620px; }
+      .hero-visual { max-width:700px; width:100%; margin:0 auto; }
+      .dashboard { transform:none; }
+      .float-card { right:-7px; }
+      .features { grid-template-columns:repeat(2,1fr); }
+      .demo-panel { grid-template-columns:1fr; }
+      .pricing-card { max-width:650px; }
+    }
+    @media(max-width:650px) {
+      .wrap { width:min(var(--max),calc(100% - 30px)); }
+      .nav { height:70px; }
+      .nav-links { display:none;position:absolute;top:69px;left:0;right:0;padding:18px;background:#0f151d;border:1px solid var(--line);border-radius:14px;flex-direction:column;gap:18px;align-items:flex-start; }
+      .nav-links.open { display:flex; }
+      .nav-actions .btn-quiet { display:none; }
+      .nav-actions .btn-primary { padding:10px 12px;font-size:11px; }
+      .menu-toggle { display:block; }
+      .brand { font-size:20px; }
+      .hero { padding:55px 0 56px; }
+      h1 { font-size:clamp(42px,12vw,58px); }
+      .hero-copy { font-size:15px; }
+      .hero-ctas { flex-direction:column;align-items:stretch; }
+      .hero-ctas .btn { width:100%; }
+      .dashboard { border-radius:15px; }
+      .dash-content { padding:11px; }
+      .dash-top { padding:0 11px; }
+      .stats { gap:5px; }
+      .stat { padding:9px 7px; }
+      .stat strong { font-size:17px; }
+      .table-head,.product-row { padding:9px 7px;gap:5px;grid-template-columns:1.7fr .75fr .65fr; }
+      .product-name { gap:5px; }
+      .product-thumb { width:22px;height:22px;font-size:11px; }
+      .product-name strong { max-width:90px;font-size:8px; }
+      .product-name small { font-size:7px; }
+      .status { font-size:7px;padding:3px 4px; }
+      .float-card { bottom:-24px;right:4px;padding:9px 11px; }
+      .trust-inner { align-items:flex-start; }
+      .trust-points { gap:13px;flex-direction:column; }
+      section { padding:72px 0; }
+      .section-head { margin-bottom:30px; }
+      .features { grid-template-columns:1fr; }
+      .feature { padding:22px; }
+      .steps { grid-template-columns:1fr;gap:4px; }
+      .step { padding:22px 0; }
+      .step:before { margin-bottom:13px; }
+      .demo-panel { padding:22px 16px; }
+      .before-after { grid-template-columns:1fr; }
+      .pricing-card { grid-template-columns:1fr;padding:25px 22px;gap:22px; }
+      .order-form { border-left:0;border-top:1px solid var(--line);padding:22px 0 0; }
+      .cta-panel { padding:52px 19px; }
+      .footer-inner { align-items:flex-start;flex-direction:column; }
+    }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important;scroll-behavior:auto!important;transition:none!important; } }
+  </style>
 </head>
 <body>
-<header><div class="wrap"><span class="brand">Bulk Re-Lister</span>
-<nav><a href="#how">How it works</a><a href="#checks">What we check</a><a href="#faq">FAQ</a></nav></div></header>
-
-<main>
-<div class="wrap hero">
-  <div>
-    <span class="tag">Listing rewrites with a built-in fact checker</span>
-    <h1>Product listings rewritten, back in about ten minutes.</h1>
-    <p class="lede">Upload a CSV of titles and descriptions. Each row is rewritten to be clearer and more searchable using only the facts you gave us, then checked automatically before it comes back to you.</p>
-    <p class="fine">$15 per batch of up to 25 listings. If more than a fifth of the rows fail our checks, you’re refunded in full.</p>
-  </div>
-  <form method="post" action="/order" enctype="multipart/form-data">
-    <!--NOTICE-->
-    <h2>Start a batch</h2>
-    <label for="e">Email</label>
-    <input id="e" name="email" type="email" maxlength="254" autocomplete="email" required>
-    <label for="f">CSV file</label>
-    <input id="f" name="file" type="file" accept=".csv" required>
-    <button>Pay $15 and start</button>
-    <small>Nothing runs until payment clears. Files are deleted after 14 days.</small>
-    <small>By paying you agree to the <a href="/terms">terms</a>. See the <a href="/privacy">privacy</a> and <a href="/refund-policy">refund</a> policies.</small>
-  </form>
-</div>
-
-<section id="how"><div class="wrap">
-  <h2>How it works</h2>
-  <ol class="steps">
-    <li><b>Upload your CSV</b>A header row with <code>title</code> and <code>description</code> columns. Up to 25 rows and 200 KB per order.</li>
-    <li><b>Pay securely</b>Checkout is handled by Stripe. We never see your card, and no rewriting starts until payment clears.</li>
-    <li><b>Download the result</b>You get a CSV by email and on a private page. Rows we couldn’t verify come back unchanged and are marked for your review.</li>
-  </ol>
-  <pre>title,description
-Ceramic mug,Blue ceramic mug. Holds 350 ml.
-Canvas tote,Everyday bag with a zip pocket.</pre>
-</div></section>
-
-<section id="checks"><div class="wrap">
-  <h2>Rewrites that stay true to your listing</h2>
-  <div class="cols">
-    <div>
-      <p>Persuasive copy is easy. Copy that doesn’t invent things is the hard part. Every rewrite goes through two checks before it reaches you: fixed rules, then a second model pass that compares it against your original.</p>
-      <ul class="checks">
-        <li>No new numbers or specifications</li>
-        <li>No materials or claims your source didn’t state</li>
-        <li>No medical or guarantee claims</li>
-        <li>Titles within 80 characters, descriptions within 1,000</li>
-        <li>Spreadsheet-safe output, with formulas neutralized</li>
-      </ul>
+  <header class="wrap nav">
+    <a class="brand" href="#top" aria-label="ListPilot home">
+      <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 15.5 10.3 6l3.2 5.2L18.8 4 17 13h3L9.8 21l2.1-6.1L5 15.5Z" fill="currentColor"/></svg></span>
+      <span>ListPilot</span>
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label="Main navigation">
+      <a href="#features">Features</a><a href="#how-it-works">How it works</a><a href="#demo">See the difference</a><a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-quiet" href="#demo">See an example</a>
+      <a class="btn btn-primary" href="#get-started">Start a batch <span aria-hidden="true">↗</span></a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation" aria-expanded="false"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
-    <div class="compare" aria-label="Illustrative example">
-      <div class="panel"><h3>Your listing</h3><p class="t">Ceramic mug</p><p>Blue ceramic mug. Holds 350 ml.</p></div>
-      <div class="panel"><h3>Illustrative rewrite</h3><p class="t">Blue Ceramic Mug, 350 ml Capacity</p><p>A blue ceramic mug that holds 350 ml, sized for tea or coffee at your desk or table.</p></div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <div class="eyebrow"><span class="pulse"></span> Listing rewrites with a built-in fact check</div>
+          <h1>Stop rewriting.<br><span class="gradient-text">Start relisting.</span></h1>
+          <p class="hero-copy">Turn raw product data into polished, marketplace-ready listings in bulk. ListPilot handles the repetitive work, so you can focus on growing your store.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-primary" href="#get-started">Start a batch <span aria-hidden="true">→</span></a>
+            <a class="btn btn-quiet" href="#demo"><span aria-hidden="true">▷</span> See how it works</a>
+          </div>
+          <div class="micro-proof"><div class="avatars"><span class="avatar">AI</span><span class="avatar">CSV</span><span class="avatar">✓</span></div><span>Bulk workflows. Consistent output. Less busywork.</span></div>
+        </div>
+        <div class="hero-visual" aria-label="Illustrative ListPilot dashboard preview">
+          <div class="visual-glow"></div>
+          <div class="dashboard">
+            <div class="dash-top"><div class="dash-label"><span class="mini-logo"></span><strong>LISTPILOT</strong><span style="color:#647382">/ WORKSPACE</span></div><div class="dots"><i></i><i></i><i></i></div></div>
+            <div class="dash-content">
+              <div class="dash-heading"><div><h3>Listing workspace</h3><p>Your catalog, in motion.</p></div><span class="tiny-button">＋ New batch</span></div>
+              <div class="stats">
+                <div class="stat"><span>Listings in batch</span><strong>248</strong><em>↑ Bulk ready</em></div>
+                <div class="stat"><span>Optimized</span><strong>193</strong><em>78% complete</em></div>
+                <div class="stat"><span>Need review</span><strong>12</strong><em style="color:#ffc76b">Check details</em></div>
+              </div>
+              <div class="table">
+                <div class="table-head"><span>Product</span><span>Status</span><span>Quality</span></div>
+                <div class="product-row"><div class="product-name"><span class="product-thumb">⌚</span><div><strong>Minimalist Watch</strong><small>SKU · WCH-042</small></div></div><span class="status">Optimized</span><span class="score">96/100</span></div>
+                <div class="product-row"><div class="product-name"><span class="product-thumb">🎧</span><div><strong>Wireless Headphones</strong><small>SKU · AUD-118</small></div></div><span class="status">Optimized</span><span class="score">92/100</span></div>
+                <div class="product-row"><div class="product-name"><span class="product-thumb">🎒</span><div><strong>Everyday Backpack</strong><small>SKU · BAG-009</small></div></div><span class="status" style="color:#ffd27d;background:#ffd27d12">Review</span><span class="score">—</span></div>
+              </div>
+            </div>
+            <div class="dash-bottom"><span>Batch processing <span class="progress"><i></i></span></span><span>Illustrative · sample data</span></div>
+          </div>
+          <div class="float-card"><span class="float-icon">✦</span><div><strong>Batch optimized</strong><small>Consistent listings, less manual work</small></div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="trust-strip">
+      <div class="wrap trust-inner"><span class="trust-label">Built for high-volume workflows</span><div class="trust-points"><span><b class="check">✓</b> CSV-first workflow</span><span><b class="check">✓</b> AI-assisted rewriting</span><span><b class="check">✓</b> Review before export</span><span><b class="check">✓</b> Stripe checkout</span></div></div>
     </div>
-  </div>
-  <p class="fine">The example above is illustrative. Results vary with the listing you send. Please review all output before you publish it.</p>
-</div></section>
 
-<section><div class="wrap price">
-  <div><span class="n">$15</span> per batch</div>
-  <p style="max-width:34rem;margin:0">Up to 25 listings per order. Pay only for the batch you upload. If more than 20% of rows can’t be verified, the refund is automatic and in full.</p>
-</div></section>
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head"><div class="section-kicker">Less busywork. More momentum.</div><h2>Your catalog deserves<br><span class="gradient-text">a better autopilot.</span></h2><p>Give every product listing the same focused attention—without editing every title and description by hand.</p></div>
+        <div class="features">
+          <article class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 10h16M4 15h10M4 20h7"/><path d="m17 16 2 2 4-5"/></svg></div><h3>Optimize in bulk</h3><p>Process product rows together instead of rewriting one listing at a time. Designed for catalogs that have outgrown manual editing.</p></article>
+          <article class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z"/></svg></div><h3>AI-powered rewriting</h3><p>Transform rough product copy into clearer, more compelling titles and descriptions while keeping the original product details in view.</p></article>
+          <article class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 20 6v5c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg></div><h3>Quality checks</h3><p>Flag content that needs another look. Keep a human review step between AI-generated copy and your final export.</p></article>
+          <article class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><h3>CSV in. CSV out.</h3><p>Work with a familiar spreadsheet workflow. Prepare your catalog, process the batch, then export the results for your next step.</p></article>
+          <article class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>Spend less time editing</h3><p>Replace repetitive copy-and-paste work with a repeatable workflow that can scale alongside your catalog.</p></article>
+          <article class="feature"><div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 19V5m0 14h15"/><path d="m8 15 3-4 3 2 5-7"/></svg></div><h3>Built for iteration</h3><p>Review, refine, and rerun your listing workflow as your product data and merchandising needs change.</p></article>
+        </div>
+      </div>
+    </section>
 
-<section id="faq"><div class="wrap">
-  <h2>Questions</h2>
-  <details><summary>What happens to rows that fail the checks?</summary><p>They come back exactly as you sent them, marked <code>unchanged_needs_review</code>, so you never receive an unverified rewrite by accident.</p></details>
-  <details><summary>Which marketplaces does it work for?</summary><p>It rewrites plain titles and descriptions, so the output works anywhere you can paste text or import a CSV. It doesn’t connect to any marketplace account.</p></details>
-  <details><summary>Is my data kept?</summary><p>Uploads, results and your email are deleted automatically 14 days after your order. Unpaid uploads are deleted after 24 hours. Your listing text is sent to our AI provider, Anthropic, to produce the rewrite.</p></details>
-  <details><summary>Can I trust the output without reading it?</summary><p>No. The checks catch invented specs and risky claims, but the output is machine-generated, so review it before you publish.</p></details>
-  <details><summary>Something went wrong with my order.</summary><p>Contact us within 14 days using the address on the <a href="/refund-policy">refund policy</a> page and we’ll review it.</p></details>
-</div></section>
-</main>
+    <section class="workflow" id="how-it-works">
+      <div class="wrap">
+        <div class="section-head"><div class="section-kicker">How it works</div><h2>From raw rows to<br><span class="gradient-text">ready-to-review listings.</span></h2><p>Start with the product data you already have.</p></div>
+        <div class="steps">
+          <article class="step"><h3>Upload your CSV</h3><p>A header row with <code>title</code> and <code>description</code> columns. Up to 25 rows and 200 KB per order.</p></article>
+          <article class="step"><h3>Pay securely, we rewrite</h3><p>Checkout is handled by Stripe, and nothing runs until payment clears. Each row is then rewritten and checked against your original.</p></article>
+          <article class="step"><h3>Review and download</h3><p>You get a CSV by email and on a private page. Rows we couldn’t verify come back unchanged and are marked for your review.</p></article>
+        </div>
+      </div>
+    </section>
 
-<footer><div class="wrap"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refund-policy">Refund policy</a></div></footer>
+    <section id="demo">
+      <div class="wrap">
+        <div class="demo-panel">
+          <div class="demo-copy"><div class="section-kicker">The transformation</div><h2>Good product data.<br><span class="gradient-text">Better presentation.</span></h2><p>ListPilot is designed to make product copy more consistent and useful—while keeping source facts visible for review.</p><button class="btn btn-primary" id="tryDemo">Try another example <span aria-hidden="true">→</span></button><p style="font-size:11px;margin-top:14px">The demo uses sample data only. Nothing is uploaded.</p></div>
+          <div class="demo-preview">
+            <div class="demo-preview-top"><strong>Listing preview</strong><span id="demoState">Before → After</span></div>
+            <div class="before-after">
+              <div class="sample"><small>Original copy</small><strong id="beforeTitle">Bluetooth Headphones</strong><p id="beforeDesc">Headphones wireless. Black color. Rechargeable. For music and calls.</p></div>
+              <div class="sample after"><small>ListPilot-style output</small><strong id="afterTitle">Wireless Bluetooth Headphones — Black</strong><p id="afterDesc">Enjoy wireless listening and hands-free calls with these black Bluetooth headphones. Rechargeable design for everyday listening.</p></div>
+            </div>
+            <div class="demo-note"><span class="check">✦</span><span id="demoNote">Clearer structure, same source details. Review all generated claims before publishing.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="get-started">
+      <div class="wrap">
+        <div class="section-head"><div class="section-kicker">Start a batch</div><h2>Make your next batch<br><span class="gradient-text">your easiest one yet.</span></h2><p>Upload a CSV, pay once, and get the rewritten listings back, usually in about ten minutes.</p></div>
+        <div class="pricing-card">
+          <div><h3>ListPilot batch</h3><p>Up to 25 listings per order. Pay only for the batch you upload.</p><div class="price-placeholder">$15 <small>· per batch</small></div><ul class="included"><li><span class="check">✓</span> Up to 25 rows and 200 KB per order</li><li><span class="check">✓</span> Rewrites use only the facts you provided</li><li><span class="check">✓</span> Rows we can’t verify come back unchanged, marked for review</li><li><span class="check">✓</span> Full refund if more than 20% of rows fail our checks</li></ul></div>
+          <form class="order-form" method="post" action="/order" enctype="multipart/form-data">
+            <!--NOTICE-->
+            <h3>Start a batch</h3>
+            <label for="e">Email</label>
+            <input id="e" name="email" type="email" maxlength="254" autocomplete="email" required>
+            <label for="f">CSV file (<code>title</code> and <code>description</code> columns)</label>
+            <input id="f" name="file" type="file" accept=".csv" required>
+            <button>Pay $15 and start</button>
+            <small>Nothing runs until payment clears. Checkout is handled by Stripe. Files are deleted after 14 days.</small>
+            <small>By paying you agree to the <a href="/terms">terms</a>. See the <a href="/privacy">privacy</a> and <a href="/refund-policy">refund</a> policies.</small>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head"><div class="section-kicker">Questions, answered</div><h2>Before you take off.</h2><p>A few things to know before you upload.</p></div>
+        <div class="faq">
+          <div class="faq-item open"><button class="faq-q" aria-expanded="true"><span>What does ListPilot do?</span><span>＋</span></button><div class="faq-a">ListPilot rewrites product titles and descriptions in bulk using AI, then runs automated checks against your original before returning a CSV.</div></div>
+          <div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Does it publish directly to marketplaces?</span><span>＋</span></button><div class="faq-a">No. ListPilot rewrites plain titles and descriptions, so the output works anywhere you can paste text or import a CSV. It doesn’t connect to any marketplace account.</div></div>
+          <div class="faq-item"><button class="faq-q" aria-expanded="false"><span>What happens to rows that fail the checks?</span><span>＋</span></button><div class="faq-a">They come back exactly as you sent them, marked <code>unchanged_needs_review</code>, so you never receive an unverified rewrite by accident.</div></div>
+          <div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Can AI guarantee every listing is accurate?</span><span>＋</span></button><div class="faq-a">No. The checks catch invented specs and risky claims, but the output is machine-generated, so review it before you publish, especially specifications, compatibility, condition, and performance claims.</div></div>
+          <div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Is my data kept?</span><span>＋</span></button><div class="faq-a">Uploads, results and your email are deleted automatically 14 days after your order. Unpaid uploads are deleted after 24 hours. Your listing text is sent to our AI provider, Anthropic, to produce the rewrite.</div></div>
+          <div class="faq-item"><button class="faq-q" aria-expanded="false"><span>Something went wrong with my order.</span><span>＋</span></button><div class="faq-a">Contact us within 14 days using the address on the <a href="/refund-policy" style="text-decoration:underline">refund policy</a> page and we’ll review it.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="wrap"><div class="cta-panel"><div class="eyebrow"><span class="pulse"></span> Take the manual work out of the loop</div><h2>Your catalog has places to go.<br><span class="gradient-text">Let’s get it moving.</span></h2><p>Meet ListPilot: a smarter starting point for bulk listing optimization, built around clarity, consistency, and control.</p><a href="#get-started" class="btn btn-primary">Start a batch <span aria-hidden="true">→</span></a></div></div>
+    </section>
+  </main>
+
+  <footer><div class="wrap footer-inner"><a class="brand" href="#top" style="font-size:17px"><span class="brand-mark" style="width:29px;height:29px;border-radius:9px"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 15.5 10.3 6l3.2 5.2L18.8 4 17 13h3L9.8 21l2.1-6.1L5 15.5Z" fill="currentColor"/></svg></span><span>ListPilot</span></a><span>© <span id="year"></span> ListPilot</span><div class="footer-links"><a href="#features">Features</a><a href="#faq">FAQ</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refund-policy">Refunds</a></div></div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+    const toast = (message) => {
+      const node = $('#toast'); node.textContent = message; node.classList.add('show');
+      clearTimeout(window.__toastTimer); window.__toastTimer = setTimeout(() => node.classList.remove('show'), 3400);
+    };
+    $('#year').textContent = new Date().getFullYear();
+    const menuToggle = $('#menuToggle'), navLinks = $('#navLinks');
+    menuToggle.addEventListener('click', () => {
+      const open = navLinks.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(open));
+    });
+    navLinks.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+      navLinks.classList.remove('open'); menuToggle.setAttribute('aria-expanded','false');
+    }));
+    document.querySelectorAll('.faq-q').forEach(button => button.addEventListener('click', () => {
+      const item = button.closest('.faq-item'), open = item.classList.toggle('open');
+      button.setAttribute('aria-expanded', String(open));
+    }));
+    const examples = [
+      {
+        beforeTitle:'Bluetooth Headphones',
+        beforeDesc:'Headphones wireless. Black color. Rechargeable. For music and calls.',
+        afterTitle:'Wireless Bluetooth Headphones — Black',
+        afterDesc:'Enjoy wireless listening and hands-free calls with these black Bluetooth headphones. Rechargeable design for everyday listening.',
+        note:'Clearer structure, same source details. Review all generated claims before publishing.'
+      },
+      {
+        beforeTitle:'Canvas Backpack',
+        beforeDesc:'Bag for daily use. Canvas. Multiple pockets. Adjustable straps.',
+        afterTitle:'Everyday Canvas Backpack with Adjustable Straps',
+        afterDesc:'A practical canvas backpack for daily use, featuring multiple pockets and adjustable straps to help organize your everyday essentials.',
+        note:'Features from the source are preserved. Always verify dimensions, materials, and included accessories.'
+      },
+      {
+        beforeTitle:'Ceramic Coffee Mug',
+        beforeDesc:'White mug. Ceramic. For coffee or tea. Simple style.',
+        afterTitle:'White Ceramic Mug for Coffee and Tea',
+        afterDesc:'Keep your everyday drink simple with a white ceramic mug suited to coffee, tea, and other favorite beverages.',
+        note:'Readable copy can make a listing easier to scan without inventing product specifications.'
+      }
+    ];
+    let exampleIndex = 0;
+    $('#tryDemo').addEventListener('click', () => {
+      exampleIndex = (exampleIndex + 1) % examples.length;
+      const item = examples[exampleIndex];
+      $('#beforeTitle').textContent = item.beforeTitle;
+      $('#beforeDesc').textContent = item.beforeDesc;
+      $('#afterTitle').textContent = item.afterTitle;
+      $('#afterDesc').textContent = item.afterDesc;
+      $('#demoNote').textContent = item.note;
+      $('#demoState').textContent = `Sample ${exampleIndex + 1} of ${examples.length}`;
+      toast('Sample listing changed — this is a local interactive preview.');
+    });
+  </script>
 </body>
 </html>
