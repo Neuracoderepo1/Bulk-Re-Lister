@@ -2,6 +2,8 @@
 import csv, io, json, os, re, sqlite3, time
 
 DB_PATH = os.getenv("DB_PATH", "app.db")
+DATABASE_URL = os.getenv("DATABASE_URL")  # Postgres (Supabase) when set; otherwise SQLite at DB_PATH
+PG = bool(DATABASE_URL)
 MODEL = os.getenv("MODEL")  # required; verified at startup
 MAX_ROWS, MAX_BYTES = 25, 200_000
 TITLE_MAX, DESC_MAX = 80, 1000
@@ -22,26 +24,72 @@ NUM = re.compile(r"\d+(?:[.,]\d+)?")
 WORD = re.compile(r"[a-z][a-z-]+")
 
 
+class Row(dict):
+    """Dict row that also supports positional access, so both backends behave alike."""
+    def __getitem__(self, k):
+        return super().__getitem__(k) if isinstance(k, str) else tuple(self.values())[k]
+
+
+_POOL = None
+
+
+def _pool():
+    global _POOL
+    if _POOL is None:
+        from psycopg_pool import ConnectionPool
+
+        def row_factory(cur):
+            cols = [d.name for d in cur.description] if cur.description else []
+            return lambda vals: Row(zip(cols, vals))
+        # prepare_threshold=None: safe behind Supabase's transaction pooler (port 6543)
+        _POOL = ConnectionPool(DATABASE_URL, min_size=1, max_size=int(os.getenv("DB_POOL_MAX", "10")),
+                               kwargs={"row_factory": row_factory, "prepare_threshold": None}, open=True)
+    return _POOL
+
+
+class _PGConn:
+    """Context manager: one pooled connection, one transaction (commit on exit, rollback on error)."""
+    def __enter__(self):
+        self._cm = _pool().connection()
+        self._c = self._cm.__enter__()
+        return self
+
+    def __exit__(self, *exc):
+        return self._cm.__exit__(*exc)
+
+    def execute(self, sql, params=()):
+        return self._c.execute(sql.replace("?", "%s"), params)
+
+
 def conn():
+    if PG:
+        return _PGConn()
     c = sqlite3.connect(DB_PATH, timeout=30)
     c.row_factory = sqlite3.Row
     c.execute("PRAGMA journal_mode=WAL")
     return c
 
 
+DDL = [
+    """CREATE TABLE IF NOT EXISTS rl_jobs(id TEXT PRIMARY KEY, email TEXT, status TEXT, input TEXT,
+        output TEXT, failed INTEGER DEFAULT 0, total INTEGER, payment TEXT, created DOUBLE PRECISION,
+        updated DOUBLE PRECISION, attempts INTEGER DEFAULT 0)""",
+    "CREATE TABLE IF NOT EXISTS rl_ledger(ts DOUBLE PRECISION, job_id TEXT, kind TEXT, amount DOUBLE PRECISION, note TEXT)",
+    "CREATE TABLE IF NOT EXISTS rl_settings(k TEXT PRIMARY KEY, v TEXT)",
+    "CREATE INDEX IF NOT EXISTS rl_ledger_kind_ts ON rl_ledger(kind, ts)",
+    "CREATE INDEX IF NOT EXISTS rl_jobs_status ON rl_jobs(status)",
+]
+
+
 def init():
     with conn() as c:
-        c.executescript("""
-        CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, email TEXT, status TEXT, input TEXT,
-            output TEXT, failed INTEGER DEFAULT 0, total INTEGER, payment TEXT, created REAL,
-            updated REAL, attempts INTEGER DEFAULT 0);
-        CREATE TABLE IF NOT EXISTS ledger(ts REAL, job_id TEXT, kind TEXT, amount REAL, note TEXT);
-        CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT);""")
+        for stmt in DDL:
+            c.execute(stmt)
 
 
 def log(kind, amount=0.0, job_id="", note=""):
     with conn() as c:
-        c.execute("INSERT INTO ledger VALUES(?,?,?,?,?)", (time.time(), job_id, kind, amount, note))
+        c.execute("INSERT INTO rl_ledger VALUES(?,?,?,?,?)", (time.time(), job_id, kind, amount, note))
 
 
 def _day_start():
@@ -50,22 +98,31 @@ def _day_start():
 
 def today_sum(kind):
     with conn() as c:
-        return c.execute("SELECT COALESCE(SUM(amount),0) FROM ledger WHERE kind=? AND ts>=?",
+        return c.execute("SELECT COALESCE(SUM(amount),0) FROM rl_ledger WHERE kind=? AND ts>=?",
                          (kind, _day_start())).fetchone()[0]
 
 
 def reserve(job_id, amount=None):
     """Atomically reserve inference budget BEFORE a model call. False if the daily cap would be exceeded."""
     amount = COST_PER_CALL if amount is None else amount
+    if PG:  # advisory lock serializes reservations across workers; released at commit
+        with conn() as c:
+            c.execute("SELECT pg_advisory_xact_lock(746101)")
+            spent = c.execute("SELECT COALESCE(SUM(amount),0) AS s FROM rl_ledger WHERE kind='inference' AND ts>=?",
+                              (_day_start(),)).fetchone()[0]
+            if spent + amount > DAILY_SPEND_CAP:
+                return False
+            c.execute("INSERT INTO rl_ledger VALUES(?,?,?,?,?)", (time.time(), job_id, "inference", amount, ""))
+            return True
     c = sqlite3.connect(DB_PATH, timeout=30, isolation_level=None)
     try:
         c.execute("BEGIN IMMEDIATE")
-        spent = c.execute("SELECT COALESCE(SUM(amount),0) FROM ledger WHERE kind='inference' AND ts>=?",
+        spent = c.execute("SELECT COALESCE(SUM(amount),0) FROM rl_ledger WHERE kind='inference' AND ts>=?",
                           (_day_start(),)).fetchone()[0]
         if spent + amount > DAILY_SPEND_CAP:
             c.execute("ROLLBACK")
             return False
-        c.execute("INSERT INTO ledger VALUES(?,?,?,?,?)", (time.time(), job_id, "inference", amount, ""))
+        c.execute("INSERT INTO rl_ledger VALUES(?,?,?,?,?)", (time.time(), job_id, "inference", amount, ""))
         c.execute("COMMIT")
         return True
     finally:
@@ -74,13 +131,14 @@ def reserve(job_id, amount=None):
 
 def set_intake(is_open):
     with conn() as c:
-        c.execute("INSERT OR REPLACE INTO settings VALUES('intake',?)", ("1" if is_open else "0",))
+        c.execute("INSERT INTO rl_settings(k,v) VALUES('intake',?) ON CONFLICT(k) DO UPDATE SET v=excluded.v",
+                  ("1" if is_open else "0",))
 
 
 def intake_open():
     """Kill switch + model health + daily spend cap."""
     with conn() as c:
-        r = c.execute("SELECT v FROM settings WHERE k='intake'").fetchone()
+        r = c.execute("SELECT v FROM rl_settings WHERE k='intake'").fetchone()
     return HEALTHY and (r is None or r["v"] == "1") and today_sum("inference") < DAILY_SPEND_CAP
 
 
@@ -154,10 +212,10 @@ def llm_check(llm, src, out):
 def process_job(job_id, llm, refund_fn=None):
     """Run a job in 'processing'. Returns done | refunded | needs_owner (or None if not runnable)."""
     with conn() as c:
-        job = c.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+        job = c.execute("SELECT * FROM rl_jobs WHERE id=?", (job_id,)).fetchone()
         if not job or job["status"] != "processing":
             return None
-        c.execute("UPDATE jobs SET attempts=attempts+1, updated=? WHERE id=?", (time.time(), job_id))
+        c.execute("UPDATE rl_jobs SET attempts=attempts+1, updated=? WHERE id=?", (time.time(), job_id))
     rows, out, failed = json.loads(job["input"]), [], 0
     for src in rows:
         result, reason = None, ""
@@ -181,7 +239,7 @@ def process_job(job_id, llm, refund_fn=None):
         failed += result is None
         out.append({**(result or src), "status": "ok" if result else "unchanged_needs_review"})
         with conn() as c:  # heartbeat so recovery doesn't requeue a live job
-            c.execute("UPDATE jobs SET updated=? WHERE id=?", (time.time(), job_id))
+            c.execute("UPDATE rl_jobs SET updated=? WHERE id=?", (time.time(), job_id))
     buf = io.StringIO()
     w = csv.writer(buf)
     w.writerow(["title", "description", "status"])
@@ -194,22 +252,23 @@ def process_job(job_id, llm, refund_fn=None):
         if ok:
             log("refund", 1, job_id)
     with conn() as c:
-        c.execute("UPDATE jobs SET status=?, output=?, failed=?, total=? WHERE id=?",
+        c.execute("UPDATE rl_jobs SET status=?, output=?, failed=?, total=? WHERE id=?",
                   (status, buf.getvalue(), failed, len(rows), job_id))
     log("job", 0, job_id, f"{status} failed={failed}/{len(rows)}")
     return status
 
 
 def recover_stale():
-    """Requeue jobs stuck in processing (crash/restart). Returns ids to rerun; gives up after MAX_ATTEMPTS."""
+    """Requeue jobs stuck in processing (crash/restart). Returns ids to rerun; gives up after MAX_ATTEMPTS.
+    Each job is claimed atomically, so two workers can never both requeue the same job."""
     now, ids = time.time(), []
     with conn() as c:
-        for r in c.execute("SELECT id, attempts FROM jobs WHERE status='processing' AND COALESCE(updated,0)<?",
+        for r in c.execute("SELECT id, attempts FROM rl_jobs WHERE status='processing' AND COALESCE(updated,0)<?",
                            (now - STALE_SECONDS,)).fetchall():
             if r["attempts"] >= MAX_ATTEMPTS:
-                c.execute("UPDATE jobs SET status='needs_owner' WHERE id=?", (r["id"],))
-            else:
-                c.execute("UPDATE jobs SET updated=? WHERE id=?", (now, r["id"]))
+                c.execute("UPDATE rl_jobs SET status='needs_owner' WHERE id=? AND status='processing'", (r["id"],))
+            elif c.execute("UPDATE rl_jobs SET updated=? WHERE id=? AND status='processing' AND COALESCE(updated,0)<?",
+                           (now, r["id"], now - STALE_SECONDS)).rowcount:
                 ids.append(r["id"])
     return ids
 
@@ -218,8 +277,8 @@ def purge():
     """Retention: drop abandoned unpaid jobs after 24h; wipe customer data after RETENTION_DAYS."""
     now = time.time()
     with conn() as c:
-        c.execute("DELETE FROM jobs WHERE status='pending' AND created<?", (now - 86400,))
-        c.execute("UPDATE jobs SET status='expired', input='[]', output=NULL, email='' "
+        c.execute("DELETE FROM rl_jobs WHERE status='pending' AND created<?", (now - 86400,))
+        c.execute("UPDATE rl_jobs SET status='expired', input='[]', output=NULL, email='' "
                   "WHERE created<? AND status NOT IN ('pending','processing','expired')",
                   (now - RETENTION_DAYS * 86400,))
 

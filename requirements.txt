@@ -1,6 +1,7 @@
-# Ranges only: generate a hashed lockfile before deploying (see README).
+# Ranges only: the hashed lockfile (requirements.lock) is what you deploy.
 fastapi>=0.110
 uvicorn>=0.29
 stripe>=8
 anthropic>=0.40
 python-multipart>=0.0.9
+psycopg[binary,pool]>=3.2

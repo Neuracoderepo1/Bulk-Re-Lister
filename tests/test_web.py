@@ -44,7 +44,7 @@ def place_order():
     r = client.post("/order", data={"email": "a@b.co"}, files={"file": ("l.csv", CSV, "text/csv")})
     assert r.status_code == 303, r.text
     with core.conn() as c:
-        return c.execute("SELECT id, status FROM jobs ORDER BY created DESC LIMIT 1").fetchone()
+        return c.execute("SELECT id, status FROM rl_jobs ORDER BY created DESC LIMIT 1").fetchone()
 
 
 def test_full_flow():
@@ -56,7 +56,7 @@ def test_full_flow():
     body = paid_event(j["id"])
     assert client.post("/webhook", content=body, headers=sign(body)).status_code == 200
     with core.conn() as c:
-        row = c.execute("SELECT status, output FROM jobs WHERE id=?", (j["id"],)).fetchone()
+        row = c.execute("SELECT status, output FROM rl_jobs WHERE id=?", (j["id"],)).fetchone()
     assert row["status"] == "done", row["status"]
     d = client.get(f"/job/{j['id']}/download")
     assert d.status_code == 200 and "Great value." in d.text and d.headers["cache-control"] == "no-store"
@@ -74,7 +74,7 @@ def test_webhook_rejects_bad_signature_and_wrong_amount():
     body2 = paid_event(j["id"], amount=100)
     assert client.post("/webhook", content=body2, headers=sign(body2)).status_code == 200
     with core.conn() as c:
-        assert c.execute("SELECT status FROM jobs WHERE id=?", (j["id"],)).fetchone()[0] == "pending"
+        assert c.execute("SELECT status FROM rl_jobs WHERE id=?", (j["id"],)).fetchone()[0] == "pending"
 
 
 def test_order_validation():
@@ -102,13 +102,22 @@ def test_manual_review_release_and_refund():
     h = {"x-admin-token": "tok-123"}
     with core.conn() as c:
         for jid in ("n1", "n2"):
-            c.execute("INSERT INTO jobs(id,email,status,input,output,payment,created) VALUES(?,?,?,?,?,?,?)",
+            c.execute("INSERT INTO rl_jobs(id,email,status,input,output,payment,created) VALUES(?,?,?,?,?,?,?)",
                       (jid, "a@b.co", "needs_owner", "[]", "title,description,status\n", "pi_x", time.time()))
     assert client.post("/admin/job/n1/release", headers=h).status_code == 200
     assert client.post("/admin/job/n1/release", headers=h).status_code == 409  # not replayable
     assert client.post("/admin/job/n2/refund", headers=h).status_code == 200
     assert REFUNDS and REFUNDS[-1]["payment_intent"] == "pi_x"
     assert client.post("/admin/job/n2/refund", headers=h).status_code == 409
+
+
+def test_healthz_and_legal_pages():
+    r = client.get("/healthz")
+    assert r.status_code == 200 and r.json()["ok"] is True
+    for p in ("terms", "privacy", "refund-policy"):
+        assert client.get(f"/{p}").status_code == 200
+    assert client.get("/nonsense").status_code == 404
+    assert "/terms" in client.get("/").text
 
 
 if __name__ == "__main__":

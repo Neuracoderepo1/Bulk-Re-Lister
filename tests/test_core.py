@@ -16,7 +16,7 @@ def fake_llm(bad=False):
 
 def add_job(jid, rows):
     with core.conn() as c:
-        c.execute("INSERT INTO jobs(id,email,status,input,created,updated,attempts) VALUES(?,?,?,?,?,?,0)", (jid, "a@b.c", "processing", json.dumps(rows), time.time(), time.time()))
+        c.execute("INSERT INTO rl_jobs(id,email,status,input,created,updated,attempts) VALUES(?,?,?,?,?,?,0)", (jid, "a@b.c", "processing", json.dumps(rows), time.time(), time.time()))
 
 
 def test_validation():
@@ -56,17 +56,17 @@ def test_hardening():
 def test_recovery_and_purge():
     add_job("r1", [{"title": "Mug", "description": "x"}])
     with core.conn() as c:
-        c.execute("UPDATE jobs SET updated=? WHERE id='r1'", (time.time() - 9999,))
+        c.execute("UPDATE rl_jobs SET updated=? WHERE id='r1'", (time.time() - 9999,))
     assert "r1" in core.recover_stale()
     with core.conn() as c:
-        c.execute("UPDATE jobs SET updated=?, attempts=3 WHERE id='r1'", (time.time() - 9999,))
+        c.execute("UPDATE rl_jobs SET updated=?, attempts=3 WHERE id='r1'", (time.time() - 9999,))
     core.recover_stale()
     with core.conn() as c:
-        assert c.execute("SELECT status FROM jobs WHERE id='r1'").fetchone()[0] == "needs_owner"
-        c.execute("UPDATE jobs SET created=? WHERE id='j1'", (time.time() - 99 * 86400,))
+        assert c.execute("SELECT status FROM rl_jobs WHERE id='r1'").fetchone()[0] == "needs_owner"
+        c.execute("UPDATE rl_jobs SET created=? WHERE id='j1'", (time.time() - 99 * 86400,))
     core.purge()
     with core.conn() as c:
-        assert c.execute("SELECT status, output FROM jobs WHERE id='j1'").fetchone()[:] == ("expired", None)
+        assert c.execute("SELECT status, output FROM rl_jobs WHERE id='j1'").fetchone()[:] == ("expired", None)
 
 
 def test_reserve_cap():
@@ -74,6 +74,26 @@ def test_reserve_cap():
     core.DAILY_SPEND_CAP = core.today_sum("inference") + core.COST_PER_CALL * 1.5
     assert core.reserve("x") and not core.reserve("x")
     core.DAILY_SPEND_CAP = old
+
+
+def test_reserve_cap_under_concurrency():
+    import threading
+    old = core.DAILY_SPEND_CAP
+    core.DAILY_SPEND_CAP = core.today_sum("inference") + core.COST_PER_CALL * 5.5
+    wins = []
+    ts = [threading.Thread(target=lambda: wins.append(core.reserve("race"))) for _ in range(40)]
+    [x.start() for x in ts]
+    [x.join() for x in ts]
+    core.DAILY_SPEND_CAP = old
+    assert sum(wins) == 5, sum(wins)  # never overspends, never underspends
+
+
+def test_recover_claims_atomically():
+    add_job("c1", [{"title": "Mug", "description": "x"}])
+    with core.conn() as c:
+        c.execute("UPDATE rl_jobs SET updated=? WHERE id='c1'", (time.time() - 9999,))
+    assert core.recover_stale().count("c1") == 1
+    assert "c1" not in core.recover_stale()  # already claimed
 
 
 def test_kill_switch_and_cap():
