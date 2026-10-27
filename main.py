@@ -202,6 +202,10 @@ async def webhook(request: Request, bg: BackgroundTasks):
         if n:
             core.log("revenue", PRICE_CENTS / 100, jid)
             bg.add_task(run_job, jid)
+        elif get_job(jid) is None:  # paid but no job row (e.g. DB failed after the Stripe session was created)
+            ok = refund({"id": jid, "payment": s.get("payment_intent")})
+            notify(OWNER, "Paid order with no job", f"Job {jid}: refund {'issued' if ok else 'FAILED, refund manually'}.")
+            core.log("refund", PRICE_CENTS / 100, jid, "orphan")
     return {"ok": True}
 
 
