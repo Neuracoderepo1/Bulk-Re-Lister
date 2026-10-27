@@ -77,6 +77,13 @@ def test_webhook_rejects_bad_signature_and_wrong_amount():
         assert c.execute("SELECT status FROM rl_jobs WHERE id=?", (j["id"],)).fetchone()[0] == "pending"
 
 
+def test_paid_event_without_job_is_refunded():
+    REFUNDS.clear()
+    body = paid_event("does-not-exist", pi="pi_orphan")
+    assert client.post("/webhook", content=body, headers=sign(body)).status_code == 200
+    assert any(r.get("payment_intent") == "pi_orphan" for r in REFUNDS)
+
+
 def test_order_validation():
     r = client.post("/order", data={"email": "nope"}, files={"file": ("l.csv", CSV, "text/csv")})
     assert r.status_code == 400
